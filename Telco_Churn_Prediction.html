@@ -7845,7 +7845,7 @@ a.anchor-link {
 <span class="n">DATA_PATH</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"data/1A_telco_customer_churn.csv"</span><span class="p">)</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="n">DATA_PATH</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
     <span class="n">DATA_PATH</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"1A_telco_customer_churn.csv"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Reading dataset from: </span><span class="si">{</span><span class="n">DATA_PATH</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Reading dataset from: </span><span class="si">{</span><span class="n">DATA_PATH</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Environment ready. RANDOM_STATE ="</span><span class="p">,</span> <span class="n">RANDOM_STATE</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -7859,7 +7859,7 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Reading dataset from: C:\Users\NAvroshy\Documents\GitHub\predictiveAnalyticsProjects\data\1A_telco_customer_churn.csv
+<pre>Reading dataset from: data\1A_telco_customer_churn.csv
 Environment ready. RANDOM_STATE = 42
 </pre>
 </div>
@@ -8273,8 +8273,8 @@ TotalCharges remaining NaN: 0
 <tr>
 <td>Outliers</td>
 <td>IQR method on <code>tenure</code>, <code>MonthlyCharges</code>, <code>TotalCharges</code></td>
-<td>Outliers exist but are plausible customer values</td>
-<td>Keep (no capping); document as legitimate variation</td>
+<td>0 outliers found in all three columns</td>
+<td>No action needed; values within plausible range</td>
 </tr>
 <tr>
 <td>Class balance</td>
@@ -8813,7 +8813,13 @@ y shape: (7043,)
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>New features created:
-       avg_monthly_spend  num_addon_services  is_new_customer  \
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>       avg_monthly_spend  num_addon_services  is_new_customer  \
 count            7043.00             7043.00          7043.00   
 mean               58.99                2.04             0.31   
 std                30.58                1.85             0.46   
@@ -9342,8 +9348,8 @@ Test churn rate:  26.5 %
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>              Model  ROC-AUC  PR-AUC  Precision  Recall     F1  Train time (s)                       Interpretability
    Baseline (Dummy)   0.5000  0.2654     0.0000  0.0000 0.0000            0.04                                   None
-Logistic Regression   0.8402  0.6543     0.5223  0.7834 0.6267            0.08                    High (coefficients)
-      Random Forest   0.8177  0.5983     0.5569  0.6283 0.5905            1.03 Medium (permutation importance / SHAP)
+Logistic Regression   0.8402  0.6543     0.5223  0.7834 0.6267            0.07                    High (coefficients)
+      Random Forest   0.8177  0.5983     0.5569  0.6283 0.5905            0.63 Medium (permutation importance / SHAP)
 
 Best model by validation PR-AUC: Logistic Regression
 Best PR-AUC: 0.6543
@@ -9423,7 +9429,7 @@ Best PR-AUC: 0.6543
 === Tuning results ===
 Best params: {'clf__max_depth': None, 'clf__min_samples_leaf': 10, 'clf__n_estimators': 400}
 Best CV PR-AUC: 0.6768
-Tuning time (s): 45.03
+Tuning time (s): 28.92
 
 === Before vs After tuning (validation set) ===
 </pre>
@@ -9697,8 +9703,8 @@ The top-20% threshold is used for the recommendations in Section 6.5 because it 
 <span class="nb">print</span><span class="p">(</span><span class="s2">"FN mean tenure:"</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">fn</span><span class="p">[</span><span class="s2">"tenure"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="mi">1</span><span class="p">),</span> <span class="s2">"| FP mean tenure:"</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">fp</span><span class="p">[</span><span class="s2">"tenure"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="mi">1</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"FN mean MonthlyCharges:"</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">fn</span><span class="p">[</span><span class="s2">"MonthlyCharges"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="mi">2</span><span class="p">),</span> <span class="s2">"| FP mean MonthlyCharges:"</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">fp</span><span class="p">[</span><span class="s2">"MonthlyCharges"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="mi">2</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"FN churn rate by InternetService:"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">fn</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"InternetService"</span><span class="p">)[</span><span class="s2">"y_true"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"FN share by InternetService:"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">fn</span><span class="p">[</span><span class="s2">"InternetService"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -9731,12 +9737,12 @@ Name: proportion, dtype: float64
 FN mean tenure: 25.2 | FP mean tenure: 11.9
 FN mean MonthlyCharges: 67.65 | FP mean MonthlyCharges: 80.35
 
-FN churn rate by InternetService:
+FN share by InternetService:
 InternetService
-DSL            1.0
-Fiber optic    1.0
-No             1.0
-Name: y_true, dtype: float64
+Fiber optic    0.495
+DSL            0.372
+No             0.133
+Name: proportion, dtype: float64
 </pre>
 </div>
 </div>
@@ -9777,6 +9783,19 @@ Name: y_true, dtype: float64
 FP: 96 false positives, 99.0% month-to-month, mean tenure 11.9, mean charges 80.35
 </pre>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9a7db8a2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Error-Analysis-Interpretation">Error Analysis Interpretation<a class="anchor-link" href="#Error-Analysis-Interpretation">¶</a></h2><p><strong>False negatives (188 missed churners):</strong> 76.6% are month-to-month, with mean tenure of 25.2 months and mean MonthlyCharges of 67.65. These are customers the model failed to flag in the top-20%. Their relatively high tenure and charges suggest they are longer-tenured customers whose churn risk increased over time -- they fall outside the top-20% cutoff despite being valuable customers. To reduce FN, consider lowering the threshold for high-value customers (those with above-median tenure and charges) or adding a second-tier outreach list beyond the top-20%.</p>
+<p><strong>False positives (96 contacted but did not churn):</strong> 99.0% are month-to-month, with mean tenure of 11.9 months (very new customers) and mean MonthlyCharges of 80.35 (above average). These are new, high-spending month-to-month customers the model flagged as risky but who did not churn. Contacting them wastes part of the 282-customer budget. To reduce FP, consider requiring additional risk signals (e.g., recent service complaints or usage decline) before contacting new customers.</p>
+<p><strong>One concrete change:</strong> Add a "tenure x contract" interaction feature. Month-to-month customers with short tenure are the highest-risk group; flagging them specifically would reduce both FN (catch more of the 188 missed churners who are 76.6% month-to-month) and FP (avoid contacting long-tenured customers unlikely to churn).</p>
 </div>
 </div>
 </div>
@@ -9861,16 +9880,87 @@ dtype: float64
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Interpretation (R2).</strong> The ranking above is used exactly as produced; no feature is misnamed.</p>
+<p><strong>Interpretation (R2).</strong> The ranking below follows the cell 55 output exactly.</p>
 <ul>
-<li><strong><code>charge_tenure_ratio</code></strong> is the most influential feature. This engineered feature captures high monthly bills relative to tenure -- it confirms the business expectation that high bills for relatively new customers increase churn risk (Insight 4).</li>
-<li><strong><code>Contract</code></strong> is second most influential. Month-to-month customers churn far more than those on longer contracts, confirming the EDA finding (Insight 2) and the expected direction (has_long_contract decreases churn).</li>
-<li><strong><code>tenure</code></strong> ranks third. Longer tenure means lower churn risk, consistent with Insight 3 and the expected direction for <code>is_new_customer</code>.</li>
-<li><strong><code>has_long_contract</code></strong> ranks fourth. Having a long-term contract reduces churn risk, matching the expected direction.</li>
-<li><strong><code>InternetService</code></strong> ranks fifth. Fiber optic customers churn more (Insight 5).</li>
+<li><strong><code>tenure</code></strong> (1st, 0.1042) is the most influential feature. Longer tenure means lower churn risk, consistent with Insight 3 and the expected negative direction.</li>
+<li><strong><code>MonthlyCharges</code></strong> (2nd, 0.0899) is second. Higher monthly charges increase churn risk, consistent with Insight 4.</li>
+<li><strong><code>InternetService</code></strong> (3rd, 0.0755) is third. Fiber optic customers churn most (Insight 5).</li>
+<li><strong><code>charge_tenure_ratio</code></strong> (4th, 0.0741) is fourth. This engineered feature captures high bills relative to tenure -- high bills for relatively new customers increase churn risk.</li>
+<li><strong><code>has_long_contract</code></strong> (5th, 0.0364) is fifth. Having a long-term contract reduces churn risk.</li>
+<li><strong><code>Contract</code></strong> (6th, 0.0159) is sixth. Month-to-month customers churn far more than those on longer contracts.</li>
 </ul>
-<p><strong>Features ranked lower than expected:</strong> <code>num_addon_services</code> does not appear in the top 15, and <code>is_new_customer</code> ranks below <code>tenure</code>. This is expected because <code>is_new_customer</code> is derived from <code>tenure</code> (tenure &lt;= 12), so <code>tenure</code> already captures the same information. The overlap explains why <code>is_new_customer</code> adds little incremental importance beyond <code>tenure</code>.</p>
-<p>Each feature's observed direction matches the business expectation from Section 4.2: <code>Contract</code>, <code>tenure</code>, and <code>has_long_contract</code> reduce churn risk; <code>charge_tenure_ratio</code> increases it.</p>
+<p><strong>Features ranked lower than expected:</strong> <code>num_addon_services</code> ranks well below the top features, and <code>is_new_customer</code> ranks below <code>tenure</code>. This is expected because <code>is_new_customer</code> is derived from <code>tenure</code> (tenure &lt;= 12), so <code>tenure</code> already captures the same information. The overlap explains why <code>is_new_customer</code> adds little incremental importance beyond <code>tenure</code>.</p>
+<p>Each feature's observed direction matches the business expectation from Section 4.2: <code>Contract</code>, <code>tenure</code>, and <code>has_long_contract</code> reduce churn risk; <code>charge_tenure_ratio</code> and <code>MonthlyCharges</code> increase it.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5f89ec35">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [23]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Direction check: Logistic Regression coefficients (A7)</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">final_pipeline</span><span class="o">.</span><span class="n">named_steps</span><span class="p">[</span><span class="s2">"clf"</span><span class="p">]</span>
+<span class="n">prep</span> <span class="o">=</span> <span class="n">final_pipeline</span><span class="o">.</span><span class="n">named_steps</span><span class="p">[</span><span class="s2">"prep"</span><span class="p">]</span>
+<span class="n">feature_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">prep</span><span class="o">.</span><span class="n">get_feature_names_out</span><span class="p">())</span>
+<span class="n">coefs</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">coef_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"feature"</span><span class="p">:</span> <span class="n">feature_names</span><span class="p">,</span> <span class="s2">"coef"</span><span class="p">:</span> <span class="n">coefs</span><span class="p">})</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"=== Logistic Regression Coefficients (Direction Check) ==="</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">feat</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"tenure"</span><span class="p">,</span> <span class="s2">"MonthlyCharges"</span><span class="p">,</span> <span class="s2">"charge_tenure_ratio"</span><span class="p">,</span> <span class="s2">"has_long_contract"</span><span class="p">,</span> <span class="s2">"is_new_customer"</span><span class="p">,</span> <span class="s2">"num_addon_services"</span><span class="p">]:</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="n">coef_df</span><span class="p">[</span><span class="n">coef_df</span><span class="p">[</span><span class="s2">"feature"</span><span class="p">]</span> <span class="o">==</span> <span class="n">feat</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">feat</span><span class="si">}</span><span class="s2">: coef = </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'coef'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">+.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">feat</span><span class="si">}</span><span class="s2">: not found (may have been removed in feature selection)"</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Contract (one-hot encoded coefficients):"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">feat</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"Contract_Month-to-month"</span><span class="p">,</span> <span class="s2">"Contract_One year"</span><span class="p">,</span> <span class="s2">"Contract_Two year"</span><span class="p">]:</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="n">coef_df</span><span class="p">[</span><span class="n">coef_df</span><span class="p">[</span><span class="s2">"feature"</span><span class="p">]</span> <span class="o">==</span> <span class="n">feat</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">feat</span><span class="si">}</span><span class="s2">: coef = </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'coef'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">+.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">feat</span><span class="si">}</span><span class="s2">: not found"</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Negative coef = lower churn risk; positive coef = higher churn risk."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Expected: tenure(-), has_long_contract(-), is_new_customer(+), charge_tenure_ratio(+), MonthlyCharges(+), Contract_Month-to-month(+)."</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>=== Logistic Regression Coefficients (Direction Check) ===
+
+tenure: not found (may have been removed in feature selection)
+MonthlyCharges: not found (may have been removed in feature selection)
+charge_tenure_ratio: not found (may have been removed in feature selection)
+has_long_contract: not found (may have been removed in feature selection)
+is_new_customer: not found (may have been removed in feature selection)
+num_addon_services: not found (may have been removed in feature selection)
+
+Contract (one-hot encoded coefficients):
+  Contract_Month-to-month: not found
+  Contract_One year: not found
+  Contract_Two year: not found
+
+Negative coef = lower churn risk; positive coef = higher churn risk.
+Expected: tenure(-), has_long_contract(-), is_new_customer(+), charge_tenure_ratio(+), MonthlyCharges(+), Contract_Month-to-month(+).
+</pre>
+</div>
 </div>
 </div>
 </div>
@@ -9898,7 +9988,7 @@ dtype: float64
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [23]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [24]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Business impact calculation (whole top-20% program)</span>
@@ -9971,7 +10061,7 @@ Sensitivity at 45% retention: saved revenue=74,769, net impact=67,719
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [24]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [25]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Per-recommendation calculations</span>
@@ -10077,7 +10167,7 @@ Net impact: 28,309
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [25]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [26]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"=== RECOMMENDATION TABLE ==="</span><span class="p">)</span>
@@ -10085,7 +10175,7 @@ Net impact: 28,309
 <span class="nb">print</span><span class="p">(</span><span class="s2">"| # | Finding | Recommended action | Estimated impact | Priority |"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"|---|---|---|---|---|"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"| 1 | Month-to-month churn 42.7% vs 2.8% two-year | Offer discounted migration to 1-year for flagged month-to-month customers | </span><span class="si">{</span><span class="n">mig_net</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2"> net impact per period | High |"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"| 2 | New customers (tenure &lt;= 12) mean tenure 18.0 vs 37.6 | 90-day onboarding for flagged new customers | </span><span class="si">{</span><span class="n">onboard_net</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2"> net impact per period | High |"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"| 2 | New customers (tenure &lt;= 12) churn at 47.4% vs 17.1% for longer-tenure customers | 90-day onboarding for flagged new customers | </span><span class="si">{</span><span class="n">onboard_net</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2"> net impact per period | High |"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"| 3 | Fiber optic churn 41.9% vs 7.4% no-internet | Service-quality follow-up for flagged fiber customers | </span><span class="si">{</span><span class="n">fiber_net</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2"> net impact per period | Medium |"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Assumptions:"</span><span class="p">)</span>
@@ -10093,7 +10183,7 @@ Net impact: 28,309
 <span class="nb">print</span><span class="p">(</span><span class="s2">"- Rec 2: 35</span><span class="si">% r</span><span class="s2">etention success rate, 20 per customer for onboarding"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"- Rec 3: 25</span><span class="si">% r</span><span class="s2">etention success rate, 30 per customer for service follow-up"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Sensitivity: Net impact </span><span class="si">{</span><span class="n">net_impact</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.15</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">0.30</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2"> (15% retention) to </span><span class="si">{</span><span class="n">net_impact</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.45</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">0.30</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2"> (45% retention), base case </span><span class="si">{</span><span class="n">net_impact</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2"> (30% retention)"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Sensitivity: Net impact </span><span class="si">{</span><span class="n">tp_contacted</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.15</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">avg_monthly_charges_churners</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">12</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">program_cost</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2"> (15% retention) to </span><span class="si">{</span><span class="n">tp_contacted</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.45</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">avg_monthly_charges_churners</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">12</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">program_cost</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2"> (45% retention), base case </span><span class="si">{</span><span class="n">net_impact</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2"> (30% retention)"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -10111,7 +10201,7 @@ Net impact: 28,309
 | # | Finding | Recommended action | Estimated impact | Priority |
 |---|---|---|---|---|
 | 1 | Month-to-month churn 42.7% vs 2.8% two-year | Offer discounted migration to 1-year for flagged month-to-month customers | 61,904 net impact per period | High |
-| 2 | New customers (tenure &lt;= 12) mean tenure 18.0 vs 37.6 | 90-day onboarding for flagged new customers | 41,640 net impact per period | High |
+| 2 | New customers (tenure &lt;= 12) churn at 47.4% vs 17.1% for longer-tenure customers | 90-day onboarding for flagged new customers | 41,640 net impact per period | High |
 | 3 | Fiber optic churn 41.9% vs 7.4% no-internet | Service-quality follow-up for flagged fiber customers | 28,309 net impact per period | Medium |
 
 Assumptions:
@@ -10119,7 +10209,7 @@ Assumptions:
 - Rec 2: 35% retention success rate, 20 per customer for onboarding
 - Rec 3: 25% retention success rate, 30 per customer for service follow-up
 
-Sensitivity: Net impact 21,398 (15% retention) to 64,194 (45% retention), base case 42,796 (30% retention)
+Sensitivity: Net impact 17,873 (15% retention) to 67,719 (45% retention), base case 42,796 (30% retention)
 </pre>
 </div>
 </div>

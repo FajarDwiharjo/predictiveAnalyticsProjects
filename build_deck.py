@@ -40,6 +40,7 @@ if not DATA_PATH.exists():
     DATA_PATH = Path("1A_telco_customer_churn.csv")
 
 df = pd.read_csv(DATA_PATH)
+original_rows, original_cols = df.shape
 
 # ---------------------------------------------------------------------------
 # Data quality (R7)
@@ -74,6 +75,7 @@ df["has_long_contract"] = (df["Contract"] != "Month-to-month").astype(int)
 df["charge_tenure_ratio"] = df["MonthlyCharges"] / (df["tenure"] + 1)
 
 X = df.drop(columns=["Churn"])
+X = X.drop(columns=["customerID"])  # identifier, not predictive (notebook cell 26)
 y = (df["Churn"] == "Yes").astype(int)
 
 num_cols = ["tenure", "MonthlyCharges", "TotalCharges", "num_addon_services",
@@ -215,6 +217,11 @@ months = 12
 expected_saved_revenue = tp_contacted * retention_success_prob * avg_charges_churners * months
 program_cost = customers_contacted * program_cost_per_customer
 net_impact = expected_saved_revenue - program_cost
+
+# Sensitivity (correct formula: tp_contacted × p × avg_charges_churners × 12 − program_cost)
+sens_15 = tp_contacted * 0.15 * avg_charges_churners * 12 - program_cost
+sens_45 = tp_contacted * 0.45 * avg_charges_churners * 12 - program_cost
+
 lift_top20 = recall_score(y_test, y_pred_topk) / y_test.mean()
 
 # Per-recommendation
@@ -339,7 +346,7 @@ story.append(Paragraph("Binary classification model to rank customers by churn r
 story.append(Spacer(1, 0.5 * inch))
 info = Table([
     ["Dataset", "1A_telco_customer_churn.csv (PA-1A)"],
-    ["Rows x Columns", f"{df.shape[0]} x {df.shape[1]}"],
+    ["Rows x Columns", f"{original_rows} x {original_cols}"],
     ["Target", "Churn (Yes/No, ~26.5% positive)"],
     ["Primary metric", "PR-AUC"],
     ["Random state", "42"],
@@ -355,7 +362,7 @@ info.setStyle(TableStyle([
 ]))
 story.append(info)
 story.append(Spacer(1, 0.4 * inch))
-story.append(Paragraph("Prepared by: NAvrosjo  |  Class: Predictive Analytics", subtitle_style))
+story.append(Paragraph("Prepared by: NAvrosjo  |  NIM: [confirm]  |  Class: Predictive Analytics", subtitle_style))
 story.append(PageBreak())
 
 # ===== Slide 2: Business problem =====
@@ -377,7 +384,7 @@ slide("The retention team must prioritize which customers to contact first",
 
 # ===== Slide 3: Data overview =====
 slide("Data: 7,043 customers, 21 features, 26.5% churn rate",
-    [Paragraph(f"<b>Dataset size:</b> {df.shape[0]} rows x {df.shape[1]} columns", body_style),
+    [Paragraph(f"<b>Dataset size:</b> {original_rows} rows x {original_cols} columns", body_style),
      Spacer(1, 6),
      Paragraph(f"<b>Class balance:</b> {churn_pct.get('No', 0):.1f}% No churn, "
                f"{churn_pct.get('Yes', 0):.1f}% Yes churn", body_style),
@@ -387,7 +394,7 @@ slide("Data: 7,043 customers, 21 features, 26.5% churn rate",
      Paragraph(f"\u2022 Missing values: {blank_totalcharges} blank strings in TotalCharges (coerced to NaN, filled with 0)", bullet_style),
      Paragraph(f"\u2022 Data types: TotalCharges read as string, coerced to numeric", bullet_style),
      Paragraph(f"\u2022 Duplicates: {dup_rows} duplicate rows; customerID is unique", bullet_style),
-     Paragraph(f"\u2022 Outliers: Checked via IQR on tenure, MonthlyCharges, TotalCharges; kept as plausible values", bullet_style),
+     Paragraph(f"\u2022 Outliers: IQR check on tenure, MonthlyCharges, TotalCharges \u2014 0 outliers found", bullet_style),
      Spacer(1, 6),
      Paragraph(f"TotalCharges blank strings occur mostly for tenure=0 customers (no accumulated charges yet).", body_style),
     ])
@@ -436,8 +443,7 @@ slide("Approach: pipeline preprocessing, 5 engineered features, stratified 60/20
                "Categorical: OneHotEncoder(handle_unknown=ignore). All inside a ColumnTransformer "
                "within a Pipeline (no leakage).", body_style),
      Spacer(1, 6),
-     Paragraph("<b>Engineered features (5):</b>", body_style),
-     Paragraph("\u2022 avg_monthly_spend - removed (highly collinear with MonthlyCharges, r=0.956)", bullet_style),
+     Paragraph("<b>Engineered features:</b> 5 created, 4 kept (avg_monthly_spend removed, r=0.956 with MonthlyCharges)", body_style),
      Paragraph("\u2022 num_addon_services - count of Yes among 6 add-on services", bullet_style),
      Paragraph("\u2022 is_new_customer - 1 if tenure <= 12", bullet_style),
      Paragraph("\u2022 has_long_contract - 1 if not month-to-month", bullet_style),
@@ -454,11 +460,16 @@ slide("Logistic Regression leads on PR-AUC and interpretability",
     ])
 
 # Build comparison table
+interpretability_map = {
+    "Baseline (Dummy)": "None",
+    "Logistic Regression": "High (coefficients)",
+    "Random Forest": "Medium (permutation importance / SHAP)",
+}
 comp_data = [["Model", "ROC-AUC", "PR-AUC", "Precision", "Recall", "F1", "Interpretability"]]
 for _, r in comparison_df.iterrows():
     comp_data.append([r["Model"], f"{r['ROC-AUC']:.3f}", f"{r['PR-AUC']:.3f}",
                       f"{r['Precision']:.3f}", f"{r['Recall']:.3f}", f"{r['F1']:.3f}",
-                      r.get("Interpretability", "-")])
+                      interpretability_map.get(r["Model"], "-")])
 comp_table = Table(comp_data, colWidths=[1.5*inch, 0.7*inch, 0.7*inch, 0.8*inch, 0.7*inch, 0.6*inch, 1.9*inch])
 comp_table.setStyle(TableStyle([
     ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
@@ -494,7 +505,7 @@ slide("Logistic Regression: test ROC-AUC %.3f, PR-AUC %.3f" % (lr_roc, lr_pr),
     ])
 
 # ===== Slide 10: Feature importance =====
-slide("charge_tenure_ratio and Contract are the top predictors",
+slide("Tenure is the top predictor; Contract ranks 6th",
     [Image(chart6, width=5*inch, height=3.2*inch),
      Spacer(1, 6),
      Paragraph("<b>Top features (permutation importance, drop in PR-AUC):</b>", body_style),
@@ -531,7 +542,7 @@ slide("Three retention recommendations with estimated net impact",
      Spacer(1, 6),
      Paragraph(f"<b>Whole program:</b> Net impact {net_impact:,.0f} (top-20% of {test_customers} test customers, "
                f"{tp_contacted} churners captured, lift {lift_top20:.2f}x).", body_style),
-     Paragraph(f"Sensitivity: {net_impact*0.15/0.30:,.0f} (15% retention) to {net_impact*0.45/0.30:,.0f} (45% retention).", body_style),
+     Paragraph(f"Sensitivity: {sens_15:,.0f} (15% retention) to {sens_45:,.0f} (45% retention).", body_style),
     ])
 
 # ===== Slide 12: Limitations =====
