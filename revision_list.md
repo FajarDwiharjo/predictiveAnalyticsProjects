@@ -1,291 +1,226 @@
-# Revision List: Telco Customer Churn Project
+# Revision List (Round 2): Telco Churn Project
 
-**Target file:** `Telco_Churn_Prediction.ipynb` (21 code cells, 60 cells total)
-**Also required:** project deck (PDF), HTML export of the notebook
+**Files reviewed:** `Telco_Churn_Prediction_1.ipynb` (saved outputs, not re-run) and `Project_Deck.pdf`
 **Dataset:** `1A_telco_customer_churn.csv` (7,043 rows, 21 columns)
 
-**How cell numbers work:** "Cell N" means the 0-based index of the cell in the notebook (cell 0 is the title cell). Numbers quoted from outputs come from a full top-to-bottom execution of the notebook on this dataset (Restart & Run All succeeded with no errors).
+**Status:** The notebook meets most of Round 1. Items below are what's left. The deck was built from an earlier run and must be regenerated after the notebook is fixed.
 
-**Priority levels**
-- **P1 (blocking):** The notebook makes a claim the output does not support, or a required element is missing. Fix before anything else.
-- **P2 (required):** A requirement from the brief is only partially met.
-- **P3 (polish):** Clarity, consistency, or reproducibility improvements.
+**Cell numbers** are 0-based indices in `Telco_Churn_Prediction_1.ipynb`.
+
+**Priority**
+- **P1:** Wrong or contradictory claim, or a bug that changes a reported number.
+- **P2:** Requirement only partly met.
+- **P3:** Clarity or presentation.
 
 ---
 
-## 1. Blocking Issues (P1)
+## Part A: Notebook
 
-### R1. Final model choice contradicts the validation results
-- **Location:** Cell 45 (section 5.5, "Best model" line), Cell 47 (section 6.1 intro), Cell 48 (final model code)
-- **Current state:**
-  - Cell 42 output: Logistic Regression has the highest validation PR-AUC (0.6543). Tuned Random Forest scores 0.6371 on validation (cell 44).
-  - Cell 45 says Random Forest was "selected for strongest PR-AUC on validation set." This is false according to the notebook's own output.
-  - Cell 47 says the tuned Random Forest is chosen, with no justification.
-- **Required change:** Pick one of two paths and make the text match:
-  - **Path A (keep Random Forest):** Write an explicit justification that does not rely on PR-AUC alone. Acceptable reasons include ranking stability across folds, better recall at the top-20% cutoff, or a better fit with the business goal. Support each reason with a number from the notebook. Also evaluate Logistic Regression on the test set (same cell pattern as cell 48) so the comparison is complete.
-  - **Path B (switch to Logistic Regression):** Re-run the test evaluation and threshold analysis for Logistic Regression. Update sections 6.2–6.5 to use it. Justify with interpretability (coefficients) and the validation PR-AUC lead.
-- **Done when:** Cell 45 and cell 47 state the same choice, the choice is justified with numbers, and the test-set results for both models are available for comparison.
+### A1. Feature importance interpretation contradicts the output (P1)
+- **Location:** Cell 56 (markdown, section 6.4)
+- **Problem:** Cell 55 output ranks features as:
+  1. tenure 0.1042
+  2. MonthlyCharges 0.0899
+  3. InternetService 0.0755
+  4. charge_tenure_ratio 0.0741
+  5. has_long_contract 0.0364
+  6. Contract 0.0159
 
-### R2. Feature importance interpretation does not match the output
-- **Location:** Cell 55 (section 6.4 interpretation paragraph)
-- **Current state:** The paragraph claims `tenure` and `is_new_customer` rank high, and that `num_addon_services` and `has_long_contract` show negative relationships. The actual top 15 from cell 54 is:
+  The text instead says `charge_tenure_ratio` is most influential, `Contract` is second, `tenure` is third, `has_long_contract` is fourth, and `InternetService` is fifth. It also claims "the ranking above is used exactly as produced." That is false.
+- **Required change:** Rewrite the paragraph in the order of the cell 55 output. Name each feature with its actual rank and value. Remove the claim that the text matches the output unless it does.
+- **Done when:** Every rank and value in the paragraph matches the cell 55 output.
 
-  | Rank | Feature | Permutation importance (drop in PR-AUC) |
+### A2. Sensitivity figures in the recommendation table are wrong (P1)
+- **Location:** Cell 60
+- **Problem:** The sensitivity line is computed as `net_impact * 0.15 / 0.30` and `net_impact * 0.45 / 0.30`. This scales net impact and ignores the fixed program cost. It gives 21,398 to 64,194.
+- **Correct values** (from cell 58, which uses the right formula): 17,873 at 15% and 67,719 at 45%.
+- **Required change:** Recompute sensitivity in cell 60 with `tp_contacted × p × avg_monthly_charges_churners × 12 − program_cost`, or reuse the values from cell 58.
+- **Done when:** Cell 60 and cell 58 print the same sensitivity values.
+
+### A3. Error analysis has no written interpretation (P2, R11)
+- **Location:** After cell 53
+- **Problem:** Cell 53 prints the FN and FP profiles, but no markdown cell explains them.
+- **Required change:** Add a markdown cell after cell 53 covering:
+  - FN (188): 76.6% month-to-month, mean tenure 25.2, mean MonthlyCharges 67.65. What this means for the top-20% cutoff.
+  - FP (96): 99.0% month-to-month, mean tenure 11.9, mean MonthlyCharges 80.35. What this means for wasted contact budget.
+  - One concrete change that would reduce FN or FP.
+- **Done when:** Each of the eight numbers above appears in the written interpretation.
+
+### A4. Meaningless calculation in cell 52 (P1)
+- **Location:** Cell 52, last print block
+- **Problem:** "FN churn rate by InternetService" is `groupby(...)["y_true"].mean()` on the FN set. Every FN has `y_true = 1`, so every group shows 1.0. The output carries no information.
+- **Required change:** Replace it with the share of FN by InternetService, for example `fn["InternetService"].value_counts(normalize=True)`. Make the label say what it shows.
+- **Done when:** The printed output varies across groups and the label describes it correctly.
+
+### A5. Outlier text contradicts the code (P1)
+- **Location:** Cell 7 (data quality table, "Outliers" row)
+- **Problem:** The table says "Outliers exist but are plausible customer values." Cell 6 found 0 outliers for `tenure`, `MonthlyCharges`, and `TotalCharges` under the IQR rule.
+- **Required change:** Change the row to state the count (0 for all three columns) and the decision (no action needed). Keep the note that the rule is IQR-based.
+- **Done when:** Cell 7 and cell 6 agree.
+
+### A6. Rec 2 finding is mislabeled (P2)
+- **Location:** Cell 60, recommendation table, row 2
+- **Problem:** The finding reads "New customers (tenure <= 12) mean tenure 18.0 vs 37.6." Those values compare churners with non-churners, not new customers with other customers.
+- **Required change:** Rewrite the finding to describe what the data shows about new customers. Either use the churn rate for `is_new_customer == 1` against `is_new_customer == 0`, or cite the 18.0 vs 37.6 figures and label them as the mean tenure of churners vs non-churners.
+- **Done when:** The finding wording and the numbers describe the same comparison.
+
+### A7. Direction claims are asserted, not checked (P2)
+- **Location:** Cell 56, last paragraph
+- **Problem:** The text says each feature's direction matches the business expectation. No code verifies the direction.
+- **Required change:** Add a short code cell that prints the Logistic Regression coefficients for `Contract`, `tenure`, `has_long_contract`, `is_new_customer`, `charge_tenure_ratio`, and `num_addon_services`. Use the signs to confirm or correct each direction claim. Scaled features make the sign meaningful, since `StandardScaler` is in the pipeline.
+- **Done when:** Each direction claim in cell 56 is backed by a coefficient sign printed in the notebook.
+
+### A8. Personal path in output (P3)
+- **Location:** Cell 1 output
+- **Problem:** The output prints `C:\Users\NAvroshy\Documents\GitHub\...`.
+- **Required change:** Replace the printed path with the relative path, or remove the print statement.
+- **Done when:** No local machine path appears in any saved output.
+
+---
+
+## Part B: Deck (`Project_Deck.pdf`)
+
+The deck must be regenerated after Part A is done. Use the numbers below as the check list. Every number must match the final notebook output.
+
+### B1. Dataset dimensions are wrong (P1)
+- **Slides:** 1 (title) and 3 (data overview)
+- **Problem:** The deck says 7043 × 26 columns. The dataset has 21 columns.
+- **Required change:** Change to 7,043 × 21 everywhere.
+
+### B2. Model comparison table does not match the notebook (P1)
+- **Slide:** 8
+- **Problem and correct values (cell 42, validation set):**
+
+  | Model | Deck shows | Notebook shows |
   |---|---|---|
-  | 1 | charge_tenure_ratio | 0.0483 |
-  | 2 | Contract | 0.0440 |
-  | 3 | tenure | 0.0264 |
-  | 4 | has_long_contract | 0.0245 |
-  | 5 | InternetService | 0.0230 |
-  | 6 | OnlineSecurity | 0.0191 |
-  | 7 | TotalCharges | 0.0178 |
-  | 8 | TechSupport | 0.0161 |
-  | 9 | OnlineBackup | 0.0063 |
-  | 10 | PaymentMethod | 0.0043 |
-  | 11 | is_new_customer | 0.0040 |
-  | 12 | StreamingMovies | 0.0034 |
-  | 13 | MultipleLines | 0.0020 |
-  | 14 | PhoneService | 0.0013 |
-  | 15 | SeniorCitizen | 0.0013 |
+  | Logistic Regression ROC-AUC | 0.840 | 0.8402 (OK) |
+  | Logistic Regression PR-AUC | 0.654 | 0.6543 (OK) |
+  | Logistic Regression precision | 0.541 | 0.5223 |
+  | Logistic Regression recall | 0.735 | 0.7834 |
+  | Logistic Regression F1 | 0.624 | 0.6267 |
+  | Random Forest ROC-AUC | 0.826 | 0.8177 |
+  | Random Forest PR-AUC | 0.618 | 0.5983 |
+  | Random Forest precision | 0.566 | 0.5569 |
+  | Random Forest recall | 0.666 | 0.6283 |
+  | Random Forest F1 | 0.612 | 0.5905 |
 
-  `num_addon_services` does not appear in the top 15.
-- **Required change:**
-  - Rewrite the paragraph using only the ranking above.
-  - Discuss `charge_tenure_ratio` first, since it is the top feature. Explain that it is a engineered feature, and say which of the business expectations it confirmed.
-  - Discuss `Contract`, `tenure`, `has_long_contract`, and `InternetService`.
-  - Explicitly state that `num_addon_services` and `is_new_customer` ranked lower than expected, and give a reason (for example, `is_new_customer` overlaps with `tenure`, which is already in the model).
-  - Compare each feature's observed direction with the expected direction in the feature engineering table (cell 28).
-- **Done when:** Every feature named in the paragraph appears in the cell 54 output, and each direction claim is supported by a churn-rate or group comparison in the notebook. If a direction claim is not checked, add a cell that checks it.
+- **Required change:** Copy the values from the cell 42 output table. Use the same rounding as the notebook.
 
-### R3. Business recommendations have no numeric impact
-- **Location:** Cell 58 (recommendation table), Cell 57 (business impact code)
-- **Current state:** The table has three rows. Their "Estimated impact" column says "Net impact per period," "Saved revenue," and "Estimate," with no numbers. Only the whole top-20% program is calculated (cell 57):
-  - Customers contacted: 282
-  - Churners captured (TP): 185
-  - Average MonthlyCharges of churners: 74.44
-  - Expected saved revenue: 49,578
-  - Program cost: 7,050
-  - Net impact: 42,528
-  - Lift at top 20%: 1.86x
-- **Required change:**
-  - Add a calculation cell for each recommendation separately. Suggested approach:
-    - **Rec 1 (month-to-month to 1-year migration):** Among top-20% month-to-month customers, count the churners captured. Assume a discount cost and a migration success rate. Calculate net impact.
-    - **Rec 2 (onboarding for tenure ≤ 12):** Count captured churners with `is_new_customer == 1` among the 282 contacted. Calculate expected saved revenue and net impact with stated assumptions.
-    - **Rec 3 (fiber optic follow-up):** Count captured churners with `InternetService == "Fiber optic"` among the 282 contacted. Calculate impact the same way.
-  - Put each number in the table, and list the assumptions under the table.
-  - Add a sensitivity note: show how net impact changes if the retention success rate is 15% and 45%.
-- **Done when:** Every row in the cell 58 table has a number, a unit, and a referenced assumption. The numbers are reproducible by running a code cell.
+### B3. Interpretability column is empty (P1)
+- **Slide:** 8
+- **Problem:** The column shows "-" for every row. Cell 42 has real values: None, High (coefficients), Medium (permutation importance / SHAP).
+- **Required change:** Fill the column from cell 42.
 
-### R4. Notebook has no saved outputs
-- **Location:** Whole notebook (uploaded version has 0 of 21 code cells with outputs and no execution counts)
-- **Required change:** After all other edits, run Restart & Run All and save the notebook so every code cell keeps its output. The brief states that output cells must not be deleted, and the grader needs to see the outputs.
-- **Done when:** Every code cell has output, and the saved file opens showing results without re-running.
+### B4. Tuning results do not match (P1)
+- **Slide:** 8
+- **Problem and correct values (cell 44):**
+  - Deck says default PR-AUC 0.6175, tuned 0.6348, improvement +0.0173.
+  - Notebook says default 0.5983, tuned 0.6405, improvement +0.0423.
+  - Deck says best params `max_depth=14, min_samples_leaf=1, n_estimators=400`.
+  - Notebook says best params `max_depth=None, min_samples_leaf=10, n_estimators=400`. Best CV PR-AUC 0.6768.
+- **Required change:** Replace with the cell 44 values. Show the best CV score and tuning time if space allows.
 
-### R5. Missing deliverables: deck PDF and HTML export
-- **Location:** Not in the uploaded files
-- **Required change:**
-  - Export the notebook to `.html` (File → Download as HTML, or `jupyter nbconvert --to html`).
-  - Build the project deck in the outline order (see R13).
-- **Done when:** `Telco_Churn_Prediction.html` and `Project_Deck.pdf` exist and every number in the deck matches the notebook output.
+### B5. Final model test results do not match (P1)
+- **Slide:** 9
+- **Problem and correct values (cell 48):**
+  - LR test ROC-AUC 0.8464 (deck 0.846, OK). PR-AUC 0.6644 (deck says 0.663).
+  - Confusion matrix is [[751, 284], [85, 289]]. The deck says TN 796, FP 239, FN 92, TP 282. The deck's TP 282 equals the number flagged at top-20%, not the true positives in the matrix.
+  - Random Forest test ROC-AUC 0.8445, PR-AUC 0.6542. The deck says 0.836 and 0.627.
+- **Required change:** Replace the confusion matrix and the RF test figures with the cell 48 values.
 
----
+### B6. Threshold metrics do not match (P1)
+- **Slide:** 9
+- **Problem and correct values (cell 50, top-20%):** Precision 0.6596 (deck 0.667), recall 0.4973 (deck 0.503), lift 1.87× (deck 1.89×). TP is 186.
+- **Required change:** Use the cell 50 and cell 58 values.
 
-## 2. Content Gaps Against the Brief (P2)
+### B7. Feature importance chart and text come from a different run (P1)
+- **Slide:** 10
+- **Problem:** The bar chart and the text list values that do not appear in the final notebook output:
+  - Deck: charge_tenure_ratio 0.0737, tenure 0.0736, MonthlyCharges 0.0554, InternetService 0.0550.
+  - Notebook (cell 55): tenure 0.1042, MonthlyCharges 0.0899, InternetService 0.0755, charge_tenure_ratio 0.0741.
+  - Deck chart shows PaperlessBilling in the top 10. In the notebook it ranks 12th.
+  - Deck text says charge_tenure_ratio is the top predictor. In the notebook it ranks 4th.
+- **Required change:** Redraw the chart from the cell 55 values, top 10 or top 15. Rewrite the bullets and the title to match. The title "charge_tenure_ratio and Contract are the top predictors" must change, since `tenure` is the top predictor and `Contract` ranks 6th.
 
-### R6. EDA insights do not state their numbers
-- **Location:** Cells 15, 18, 21, 24 (insight markdown cells after charts 2–5)
-- **Current state:**
+### B8. Recommendation numbers do not match (P1)
+- **Slide:** 11
+- **Problem and correct values (cell 60 and cell 58):**
 
-  | Cell | Chart | Insight text problem | Numbers available in output |
-  |---|---|---|---|
-  | 15 | Churn by Contract | No numbers stated | 42.7% month-to-month, 11.3% one year, 2.8% two year (cell 14) |
-  | 18 | Tenure by churn | "significantly lower," no numbers | Mean tenure 37.6 (no churn) vs 18.0 (churn) (cell 17) |
-  | 21 | MonthlyCharges by churn | "more likely," no numbers | Mean 61.27 (no churn) vs 74.44 (churn) (cell 20) |
-  | 24 | Churn by InternetService | "notably higher," no numbers | 41.9% fiber, 19.0% DSL, 7.4% no internet (cell 23) |
+  | Item | Deck shows | Notebook shows |
+  |---|---|---|
+  | Rec 1 net impact | 62,619 | 61,904 |
+  | Rec 1 churners captured | 187 of 280 | 185 of 280 |
+  | Rec 2 net impact | 41,660 | 41,640 |
+  | Rec 2 churners captured | 147 of 215 | 147 of 216 |
+  | Rec 3 net impact | 28,918 | 28,309 |
+  | Rec 3 churners captured | 162 of 242 | 159 of 240 |
+  | Whole program net impact | 43,332 | 42,796 |
+  | Whole program churners | 188 | 186 |
+  | Whole program lift | 1.89× | 1.87× |
+  | Sensitivity (15% to 45%) | 21,666 to 64,998 | 17,873 to 67,719 (after A2) |
 
-- **Required change:** Rewrite each insight to quote the numbers above and state the business implication. Remove the word "significantly" unless a statistical test supports it. If you want to use "significant," add a test (for example, a t-test on tenure) and report the p-value.
-- **Done when:** Each insight cell contains at least two numbers from the chart's own output.
+- **Required change:** Use the final values after A2 is fixed.
 
-### R7. Data quality check is not in table form
-- **Location:** Cell 8 (section 3.2)
-- **Current state:** The check prints values, but there is no table. Outlier checking is missing entirely. The brief lists outliers as a required check.
-- **Required change:**
-  - Add a markdown table in cell 7 or a new cell after cell 8 with the columns: Aspect, Check performed, Result, Decision.
-  - Rows: missing values (0 NaN, 11 blank strings in TotalCharges), data types (TotalCharges read as string), duplicates (0 rows, customerID unique), outliers (new check), class balance (26.5% churn).
-  - Add an outlier check using the IQR method on `tenure`, `MonthlyCharges`, and `TotalCharges`. Record the count and the decision (keep, because they are plausible customer values).
-- **Done when:** A markdown table exists covering all five checks, and the outlier row has a number and a decision.
+### B9. Engineered feature count is wrong (P2)
+- **Slide:** 4 (approach)
+- **Problem:** The deck says "Engineered features (5)" and then lists `avg_monthly_spend` as removed. Four features are kept.
+- **Required change:** Say "5 engineered, 4 kept. `avg_monthly_spend` removed (r = 0.956 with MonthlyCharges)."
 
-### R8. Feature selection leaves a known correlation unaddressed
-- **Location:** Cell 33 (section 4.4)
-- **Current state:**
-  - The code flags `tenure` ↔ `TotalCharges` at r = 0.826, which is above the 0.8 threshold the cell itself uses.
-  - It removes `avg_monthly_spend` (r = 0.956 with `MonthlyCharges`).
-  - Nothing explains why `tenure`/`TotalCharges` is kept.
-- **Required change:** Add a markdown explanation for the `tenure`/`TotalCharges` pair. Either:
-  - drop `TotalCharges` (its information is mostly `tenure × MonthlyCharges`), and re-run; or
-  - keep both and explain that tree and regularized models tolerate the correlation, with a measured effect on validation PR-AUC.
-- **Also:** `avg_monthly_spend` is removed from the preprocessing pipeline only implicitly (ColumnTransformer drops unlisted columns). Make the removal explicit by dropping it from `X` in cell 33, so the feature list printed in cell 29 and the pipeline match.
-- **Done when:** Every pair above the threshold has a written decision, and the feature set used by the pipeline is identical to the printed final feature list.
+### B10. Title slide is missing NIM and the author name is unclear (P1)
+- **Slide:** 1
+- **Problem:** The brief requires name, NIM, class, and dataset code on the title slide. The deck has no NIM. It says "Prepared by: NAvrosjo". The notebook path on your machine reads `NAvroshy`.
+- **Required change:** Add your NIM. Confirm your name spelling and use it consistently on the title slide and the appendix.
 
-### R9. Comparison table is missing the interpretability column and uses the wrong split
-- **Location:** Cell 42 (model comparison code and output), Cell 38 (model description table)
-- **Current state:**
-  - The table has Model, ROC-AUC, PR-AUC, Precision, Recall, F1, and Train time.
-  - The brief requires an interpretability level per model.
-  - The table is computed on the validation set. The brief says the comparison should be on the "data uji" (test set). The build guide I wrote also said validation, which contradicts the brief.
-- **Required change:**
-  - Add an "Interpretability" column (for example: Dummy = none, Logistic Regression = high, coefficients, Random Forest = medium, permutation importance / SHAP).
-  - Decide on the split. Option 1: keep validation for model selection, and add a second table with the same models on the test set, labeled as the final comparison. Option 2: compute the table on test only, after the choice in R1 is made. Option 1 is recommended because it keeps the test set single-use. Add a sentence explaining which option was used.
-- **Done when:** The table has an interpretability column, and the text states which split the table uses and why.
+### B11. Outlier claim in the deck (P3)
+- **Slide:** 3
+- **Problem:** The deck says outliers were checked and "kept as plausible values." The notebook found 0 outliers.
+- **Required change:** Say "IQR check: 0 outliers in tenure, MonthlyCharges, TotalCharges."
 
-### R10. Final test results are incomplete for the threshold analysis
-- **Location:** Cell 50 (section 6.2)
-- **Current state:** Threshold analysis is done for Random Forest only. The confusion matrix at the default 0.5 threshold (cell 48) and the top-20% confusion matrix (cell 50) are both shown but not compared in text.
-- **Required change:**
-  - Add a short comparison table: default threshold vs top-20% threshold, with precision, recall, F1, and number flagged. Default-threshold values come from cell 48 (classification report and confusion matrix).
-  - Explain in one sentence which one is used for the recommendations and why.
-- **Done when:** A two-row comparison table exists, and the text says which threshold drives section 6.5.
-
-### R11. Error analysis is thin
-- **Location:** Cell 52 (section 6.3)
-- **Current state:** The cell prints FN and FP counts and contract mix, and FN vs FP mean tenure and MonthlyCharges. The results are not interpreted in writing. The FP group is 100% month-to-month (cell 52 output), which is an important finding that is not mentioned.
-- **Required change:** Add a markdown interpretation after cell 52 covering:
-  - FN: 76.2% month-to-month, mean tenure 25.8, mean MonthlyCharges 69.02. What this means for the top-20% cutoff.
-  - FP: 100% month-to-month, mean tenure 11.0, mean MonthlyCharges 80.01. What this means for wasted contact budget.
-  - One concrete proposal to reduce FN or FP.
-- **Done when:** Each of the four group numbers appears in the written interpretation.
-
-### R12. AI usage disclosure lacks the "independent work" section
-- **Location:** Cell 59 (final markdown cell)
-- **Current state:** The disclosure lists the tool, the parts assisted by AI, and a verification statement. It does not say which decisions were made independently.
-- **Required change:** Add a bullet list titled "Independent work" covering at least: choice of primary metric (PR-AUC), threshold rule (top-20% capacity), class imbalance approach, feature selection decisions, interpretation of results, and final recommendation selection. Also remove the line "All business assumptions ... should be validated with the business team before operational use" only if it is not needed. It is fine to keep it as a limitation.
-- **Done when:** The disclosure has tool, assisted parts, verification, and independent work sections.
+### B12. Interpretability and business slides must match the notebook after the fixes
+- **Slides:** 10, 11
+- **Required change:** After A1, A2, and A7 are done, check every sentence on slides 10 and 11 against the notebook text.
 
 ---
 
-## 3. Reproducibility and Clarity (P3)
+## Part C: Final steps (after Part A and Part B)
 
-### R13. Data path does not match the uploaded layout
-- **Location:** Cell 6 (`pd.read_csv("data/1A_telco_customer_churn.csv")`) and the header in cell 0
-- **Current state:** The code expects the CSV in a `data/` subfolder. The upload places it in the working directory. Running it as-is fails unless the folder is created.
-- **Required change:** Either:
-  - add a cell at the top that checks the path and falls back to the working directory, for example:
-    ```python
-    from pathlib import Path
-    DATA_PATH = Path("data/1A_telco_customer_churn.csv")
-    if not DATA_PATH.exists():
-        DATA_PATH = Path("1A_telco_customer_churn.csv")
-    df = pd.read_csv(DATA_PATH)
-    ```
-  - or document the folder layout in cell 0.
-- **Done when:** Restart & Run All succeeds with the CSV in either location.
-
-### R14. Business impact unit is unspecified
-- **Location:** Cell 57
-- **Current state:** The program cost is set to `25` with no unit. Expected saved revenue is in the same unspecified unit.
-- **Required change:** Add a comment and a markdown note stating the unit (dataset currency, or a stated conversion). Keep it consistent across R3 and the deck.
-- **Done when:** Every monetary figure in the notebook and deck has the same stated unit.
-
-### R15. Build-guide reference in the title cell
-- **Location:** Cell 0
-- **Current state:** The title cell says "Built per `Instruction_Churn_Project_Build_Guide.md`." That file is not part of the submission.
-- **Required change:** Remove the reference, or include the file in the submission folder. Keep the header focused on the project itself.
-- **Done when:** Every reference in the notebook points to a file that is included in the submission.
-
-### R16. Make the leakage statement verifiable
-- **Location:** Cell 36 (section 4.6)
-- **Current state:** The four statements are asserted, not shown.
-- **Required change:** Add one short code cell that demonstrates the key claim, for example asserting that `X_test` rows are not present in `X_temp`, and that the fitted preprocessor's scaler means come from training data only. The brief asks for "bukti" (evidence).
-- **Done when:** A code cell prints evidence (indices check, or scaler mean compared with train mean) for at least the train-only fitting claim.
+1. Run Restart & Run All in `Telco_Churn_Prediction_1.ipynb`. Confirm it finishes with no errors.
+2. Save the notebook with outputs.
+3. Export the HTML again (`Telco_Churn_Prediction.html`).
+4. Regenerate the deck from the saved outputs. Do not type numbers from memory.
+5. Check every number in the deck against the HTML export. Use this list to tick each item:
+   - [ ] Dataset 7,043 × 21
+   - [ ] LR and RF validation table (B2)
+   - [ ] Interpretability column filled (B3)
+   - [ ] Tuning before and after (B4)
+   - [ ] LR test PR-AUC, confusion matrix, RF test (B5)
+   - [ ] Threshold precision, recall, lift (B6)
+   - [ ] Feature importance chart and bullets (B7)
+   - [ ] Recommendation table and sensitivity (B8)
+   - [ ] Engineered feature count (B9)
+   - [ ] NIM and name on title slide (B10)
+   - [ ] Outlier wording (B11)
+6. Check the AI usage disclosure appendix still matches the work done.
+7. Commit the final files to the repo and update the README (still 0 bytes in the last review).
 
 ---
 
-## 4. Deck (P2)
-
-### R17. Build the project deck in the required outline order
-The brief requires this outline, at most 15 main slides plus appendix. The table maps each slide to its notebook source.
-
-| Slide | Content | Notebook source | Revision dependency |
-|---|---|---|---|
-| 1 | Title, name, student ID, class, dataset code PA-1A | Cell 0 | - |
-| 2 | Business problem, decision supported, success metrics | Section 2 | - |
-| 3 | Data overview and data quality (7,043 × 21; 11 blank TotalCharges; no duplicates; 26.5% churn) | Cells 6, 8 | R7 |
-| 4 | EDA insight 1: target and Contract churn rates | Cells 11, 14 | R6 |
-| 5 | EDA insight 2: tenure and MonthlyCharges by churn | Cells 17, 20 | R6 |
-| 6 | EDA insight 3: InternetService churn | Cell 23 | R6 |
-| 7 | Approach: preprocessing, 5 engineered features, validation scheme | Cells 27–35 | R8 |
-| 8 | Model comparison table and tuning before/after | Cells 42, 44 | R9 |
-| 9 | Final model: why chosen, test results, confusion matrix, threshold, error analysis | Cells 47–52 | R1, R10, R11 |
-| 10 | Feature importance interpretation | Cells 54, 55 | R2 |
-| 11 | Recommendations with numeric impact (3+) | Cells 57, 58 | R3 |
-| 12 | Limitations and next steps | Cell 59 | - |
-| Appendix | AI usage disclosure, technical details | Cell 59 | R12 |
-
-**Deck rules:**
-- Slide titles state a conclusion, for example "Month-to-month customers churn at 42.7%, versus 2.8% on two-year contracts."
-- One chart per slide.
-- Every number must match the notebook. Check each number against the saved HTML export before exporting to PDF.
-- Must be understandable without a presenter.
-
----
-
-## 5. Assumptions to Confirm Before Final Numbers
-
-These are placeholders in the notebook. They must be stated in both the notebook and deck. Confirm or change them before R3 is finalized.
-
-| Assumption | Current value | Where used | Action |
-|---|---|---|---|
-| Contact capacity | Top 20% (282 of 1,409 test customers) | Cells 50, 57 | Confirm or replace with a real budget figure |
-| Retention success probability | 0.30 | Cell 57 | Confirm; add sensitivity at 0.15 and 0.45 (R3) |
-| Program cost per contacted customer | 25 (unit unspecified) | Cell 57 | Confirm unit and value (R14) |
-| Months of retained revenue | 12 | Cell 57 | Confirm |
-| Average revenue per churner | Mean MonthlyCharges of all churners (74.44) | Cell 57 | Confirm; state that it is an all-churner average |
-
----
-
-## 6. Acceptance Checklist
-
-Mark each item when verified on the final files.
+## Acceptance checklist
 
 **Notebook**
-- [ ] R1: Final model choice is consistent across cells 45, 47, 48, and justified with numbers
-- [ ] R2: Feature importance paragraph matches the cell 54 ranking
-- [ ] R3: Every recommendation has a number, unit, and assumption; sensitivity included
-- [ ] R4: All code cells have saved outputs
-- [ ] R6: Insights for cells 15, 18, 21, 24 include numbers
-- [ ] R7: Data quality table exists with five checks, including outliers
-- [ ] R8: Correlated pairs are addressed; `avg_monthly_spend` removed explicitly
-- [ ] R9: Comparison table has interpretability column; split choice is stated
-- [ ] R10: Default vs top-20% threshold comparison exists
-- [ ] R11: Error analysis interpreted in writing
-- [ ] R12: AI disclosure has the independent work section
-- [ ] R13: Notebook runs with the CSV in either location
-- [ ] R14: Monetary unit is stated everywhere
-- [ ] R15: No references to files outside the submission
-- [ ] R16: Leakage claim has at least one piece of code evidence
-- [ ] Restart & Run All passes with no errors
+- [ ] A1 feature importance text matches cell 55 output
+- [ ] A2 sensitivity values consistent between cells 58 and 60
+- [ ] A3 written error analysis after cell 53
+- [ ] A4 cell 52 output varies and is labeled correctly
+- [ ] A5 outlier wording matches cell 6
+- [ ] A6 rec 2 finding describes the correct comparison
+- [ ] A7 direction claims backed by coefficient signs
+- [ ] A8 no personal local path in outputs
 
-**Deliverables**
-- [ ] R5: HTML export of the final notebook exists
-- [ ] R17: Deck PDF follows the 10-point outline plus appendix, at most 15 main slides
-- [ ] Every number in the deck matches the notebook
-- [ ] Deck appendix contains the AI usage disclosure
+**Deck**
+- [ ] B1 to B11 all checked against the final notebook
+- [ ] B12 slides 10 and 11 text matches the notebook
 
-**Assumptions**
-- [ ] Section 5 assumptions confirmed and stated in notebook and deck
-
----
-
-## 7. Suggested Order of Work
-
-1. Confirm assumptions in Section 5. Everything in R3 and the deck depends on them.
-2. Resolve R1 (model choice). It changes sections 6.1–6.5 and the deck.
-3. Apply R8 and R9 (feature set and comparison table). These change the numbers that later sections depend on.
-4. Re-run the notebook. Update R2, R3, R6, R10, R11 with the new outputs.
-5. Complete R7, R12, R13–R16.
-6. Run Restart & Run All, then save with outputs (R4).
-7. Export HTML (R5).
-8. Build the deck from the final numbers (R17), then check every number against the HTML export.
-9. Walk the acceptance checklist.
-
-**Do not change numbers after step 6 without repeating steps 6–8.** Any change to the notebook after the deck is built creates a mismatch.
+**Repo**
+- [ ] Final notebook, HTML, and deck committed
+- [ ] README filled in
